@@ -1,0 +1,21 @@
+.env
+venv/
+__pycache__/
+*.pyc
+.streamlit/secrets.toml
+
+# extra hygiene
+.venv/
+.pytest_cache/
+.idea/
+.vscode/
+
+# private data / generated artefacts (folders kept via .gitkeep)
+data/documents/*
+data/processed/*
+models/*
+vectorstore/*
+!data/documents/.gitkeep
+!data/processed/.gitkeep
+!models/.gitkeep
+!vectorstore/.gitkeep
