@@ -3,8 +3,7 @@
   "services": {
     "backend": {
       "root": "Legal-RAG-Hallucination-Detection",
-      "framework": "fastapi",
-      "runtime": "python3.12"
+      "framework": "fastapi"
     },
     "frontend": {
       "root": "Legal-RAG-Hallucination-Detection/frontend",
