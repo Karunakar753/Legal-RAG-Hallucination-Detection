@@ -3,7 +3,18 @@ import { createRoot } from "react-dom/client";
 import ReactMarkdown from "react-markdown";
 import "./styles.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_URL =
+  import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "") ||
+  (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
+
+function getApiUrl(path) {
+  if (!API_URL) {
+    throw new Error(
+      "The analysis service is not configured. Connect a secured backend by setting VITE_API_URL.",
+    );
+  }
+  return `${API_URL}${path}`;
+}
 
 const STARTER_QUESTIONS = [
   "Summarize the facts, issues, applicable provisions, arguments, reasoning, and final order.",
@@ -32,6 +43,7 @@ function App() {
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
 
+  const apiConfigured = Boolean(API_URL);
   const showSuggestions = Boolean(documentInfo) && !result && !error;
 
   async function uploadJudgment(selectedFile) {
@@ -42,7 +54,7 @@ function App() {
     try {
       const form = new FormData();
       form.append("file", selectedFile);
-      const response = await fetch(`${API_URL}/api/documents`, {
+      const response = await fetch(getApiUrl("/api/documents"), {
         method: "POST",
         body: form,
       });
@@ -61,9 +73,10 @@ function App() {
   async function removeJudgment() {
     if (documentInfo) {
       try {
-        await fetch(`${API_URL}/api/documents/${documentInfo.document_id}`, {
-          method: "DELETE",
-        });
+        await fetch(
+          getApiUrl(`/api/documents/${documentInfo.document_id}`),
+          { method: "DELETE" },
+        );
       } catch {
         // The server clears in-memory documents on restart or cache eviction.
       }
@@ -82,7 +95,7 @@ function App() {
     setResult(null);
     setBusy(true);
     try {
-      const response = await fetch(`${API_URL}/api/query`, {
+      const response = await fetch(getApiUrl("/api/query"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -102,7 +115,7 @@ function App() {
   }
 
   function acceptFile(candidate) {
-    if (!candidate) return;
+    if (!candidate || !apiConfigured) return;
     if (!candidate.name.toLowerCase().endsWith(".pdf")) {
       setError("Choose a PDF judgment file.");
       return;
@@ -127,7 +140,7 @@ function App() {
           </span>
         </a>
         <div className="topbar-note">
-          <span className="status-dot" /> Private, evidence-first analysis
+          <span className="status-dot" /> Evidence-first legal analysis
         </div>
       </header>
 
@@ -147,6 +160,14 @@ function App() {
             reasoning, and legal provisions without leaving the source document.
           </p>
         </section>
+
+        {!apiConfigured && (
+          <p className="notice-banner" role="status">
+            The analysis service is not connected to this deployment. PDF
+            uploads and questions will be enabled after a secured backend URL is
+            configured.
+          </p>
+        )}
 
         <section className="workspace">
           <aside className="document-column">
@@ -168,7 +189,7 @@ function App() {
 
             {!documentInfo ? (
               <label
-                className={`upload-card ${dragging ? "is-dragging" : ""} ${busy ? "is-busy" : ""}`}
+                className={`upload-card ${dragging ? "is-dragging" : ""} ${busy ? "is-busy" : ""} ${!apiConfigured ? "is-disabled" : ""}`}
                 onDragOver={(event) => {
                   event.preventDefault();
                   setDragging(true);
@@ -184,7 +205,7 @@ function App() {
                   type="file"
                   accept="application/pdf,.pdf"
                   onChange={(event) => acceptFile(event.target.files[0])}
-                  disabled={busy}
+                  disabled={!apiConfigured || busy}
                 />
                 <span className="upload-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none">
@@ -192,12 +213,18 @@ function App() {
                   </svg>
                 </span>
                 <strong>
-                  {busy ? "Reading your judgment…" : "Drop your PDF here"}
+                  {busy
+                    ? "Reading your judgment…"
+                    : apiConfigured
+                      ? "Drop your PDF here"
+                      : "Analysis service unavailable"}
                 </strong>
                 <span className="upload-subtitle">
                   {busy
                     ? "Extracting text and building page references"
-                    : "or click to browse · up to 25 MB"}
+                    : apiConfigured
+                      ? "or click to browse · up to 25 MB"
+                      : "A secured backend has not been connected"}
                 </span>
                 <span className="upload-type">PDF ONLY</span>
               </label>

@@ -190,6 +190,10 @@ h1 span {
 .upload-card.is-busy {
   cursor: wait;
 }
+.upload-card.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
 .upload-card input {
   display: none;
 }

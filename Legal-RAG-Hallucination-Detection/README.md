@@ -63,7 +63,17 @@ npm run dev
 
 Open <http://127.0.0.1:5173>. The API health endpoint is <http://127.0.0.1:8000/api/health> and interactive API documentation is available at <http://127.0.0.1:8000/docs>.
 
-For a deployed frontend, configure `FRONTEND_ORIGINS` as a comma-separated list of the exact trusted origins. Do not expose the unauthenticated API publicly without adding suitable authentication, TLS, and deployment-level resource limits.
+## Deploy the frontend to Vercel
+
+Create a Vercel project from the GitHub repository and set its **Root Directory** to `frontend`. Vercel should detect Vite automatically; use `npm run build` as the build command and `dist` as the output directory.
+
+Without `VITE_API_URL`, the deployed page displays a setup notice and disables PDF upload instead of trying to call localhost. After deploying and securing the Python API, set this Vercel environment variable to the API's base URL (without `/api`):
+
+```text
+VITE_API_URL=https://your-secured-api.example.com
+```
+
+Then redeploy the frontend. The API host must allow the exact Vercel origin in its `FRONTEND_ORIGINS` setting. CORS is not authentication; add authentication, TLS, rate limits, and resource limits before accepting public uploads. `VITE_API_URL` is included in browser code, so never put API keys or other secrets in a `VITE_` variable.
 
 ## Tests
 
