@@ -1,4 +1,4 @@
-"""OpenAI answer generation. Keys come from an override, .env / environment, or Streamlit Secrets."""
+"""OpenAI-compatible answer generation. Keys come from the request or environment/.env."""
 from __future__ import annotations
 
 import os
@@ -31,32 +31,19 @@ class MissingAPIKeyError(LLMError):
 
 
 def resolve_api_key(override: Optional[str] = None) -> Optional[str]:
-    """Priority: sidebar override > environment/.env > Streamlit Secrets. Never hard-coded."""
+    """Priority: request override > environment/.env. Never hard-coded."""
     if override and override.strip():
         return override.strip()
     load_dotenv(ROOT / ".env")
-    key = os.getenv("OPENAI_API_KEY")
+    key = os.getenv("OPENAI_API_KEY") or os.getenv("GROQ_API_KEY")
     if key and key.strip():
         return key.strip()
-    try:
-        import streamlit as st
-
-        secret = st.secrets.get("OPENAI_API_KEY")
-    except Exception:  # no secrets file / not running under Streamlit
-        secret = None
-    return secret.strip() if isinstance(secret, str) and secret.strip() else None
+    return None
 
 
 def get_model_name(api_key: Optional[str] = None) -> str:
     load_dotenv(ROOT / ".env")
     name = os.getenv("OPENAI_MODEL") or os.getenv("GROQ_MODEL")
-    if not name:
-        try:
-            import streamlit as st
-
-            name = st.secrets.get("OPENAI_MODEL") or st.secrets.get("GROQ_MODEL")
-        except Exception:
-            name = None
     if name and name.strip():
         return name.strip()
     key = resolve_api_key(api_key)
@@ -79,8 +66,8 @@ def generate_answer(
     if client is None:
         if not key:
             raise MissingAPIKeyError(
-                "No API key found. Add OPENAI_API_KEY or GROQ_API_KEY to .env (local) or Streamlit Secrets "
-                "(deployment), or paste a key in the sidebar."
+                "No API key found. Set OPENAI_API_KEY or GROQ_API_KEY in .env/the server environment, "
+                "or provide a key for this request."
             )
         base_url = "https://api.groq.com/openai/v1" if is_groq else None
         client = OpenAI(api_key=key, base_url=base_url, timeout=60, max_retries=2)
