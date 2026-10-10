@@ -30,5 +30,3 @@ dev = ["pytest>=8.0"]
 [tool.uv]
 package = false
 
-[tool.vercel]
-entrypoint = "api:app"
