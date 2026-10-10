@@ -31,7 +31,7 @@ class MissingAPIKeyError(LLMError):
 
 
 def resolve_api_key(override: Optional[str] = None) -> Optional[str]:
-    """Priority: request override > environment/.env. Never hard-coded."""
+    """Priority: request override > environment/.env."""
     if override and override.strip():
         return override.strip()
     load_dotenv(ROOT / ".env")
@@ -39,6 +39,8 @@ def resolve_api_key(override: Optional[str] = None) -> Optional[str]:
     if key and key.strip():
         return key.strip()
     return None
+
+
 
 
 def get_model_name(api_key: Optional[str] = None) -> str:

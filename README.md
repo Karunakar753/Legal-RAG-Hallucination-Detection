@@ -63,17 +63,36 @@ npm run dev
 
 Open <http://127.0.0.1:5173>. The API health endpoint is <http://127.0.0.1:8000/api/health> and interactive API documentation is available at <http://127.0.0.1:8000/docs>.
 
-## Deploy the frontend to Vercel
+## Deploy the whole project to Vercel (No background runners or Render needed)
 
-Create a Vercel project from the GitHub repository and set its **Root Directory** to `frontend`. Vercel should detect Vite automatically; use `npm run build` as the build command and `dist` as the output directory.
+This repository is configured as a unified full-stack application that deploys entirely onto Vercel:
+- **Frontend**: Built automatically by Vite into `frontend/dist` and served through Vercel's global CDN.
+- **Backend**: Runs as a Python Serverless Function (`api/index.py`) using `@vercel/python`.
+- **Zero background runners**: No Render, Railway, or external containers required.
+- **Serverless-ready RAG**: Vector search runs with pure NumPy linear algebra, and embeddings use serverless-optimized providers (OpenAI, free Hugging Face Serverless Inference, or fast deterministic hash) to stay strictly within Vercel's 250 MB function size limit.
+- **Stateless resilience**: Document embeddings and chunks are preserved across ephemeral serverless invocations via client index serialization and local `/tmp` caching.
 
-Without `VITE_API_URL`, the deployed page displays a setup notice and disables PDF upload instead of trying to call localhost. After deploying and securing the Python API, set this Vercel environment variable to the API's base URL (without `/api`):
+### Deploying via Vercel Dashboard (GitHub integration)
 
-```text
-VITE_API_URL=https://your-secured-api.example.com
+1. Push this repository to GitHub.
+2. In the [Vercel Dashboard](https://vercel.com/new), import the repository.
+3. Keep the **Root Directory** as `./` (do **not** select `frontend`).
+4. Vercel automatically uses the settings in `vercel.json`:
+   - Build Command: `npm --prefix frontend run build`
+   - Output Directory: `frontend/dist`
+5. In **Environment Variables**, configure:
+   - `OPENAI_API_KEY`: Your OpenAI API key (or `GROQ_API_KEY`).
+   - `OPENAI_MODEL`: (Optional, default `gpt-4o-mini`).
+   - `EMBEDDING_PROVIDER`: (Optional: `openai`, `huggingface`, or `hash`. Defaults to `openai` if `OPENAI_API_KEY` is present, or Hugging Face Inference API).
+6. Click **Deploy**. Both the React UI and the Python `/api` endpoints will be live on the same domain with zero configuration!
+
+### Deploying via Vercel CLI
+
+```bash
+npm install -g vercel
+vercel
 ```
 
-Then redeploy the frontend. The API host must allow the exact Vercel origin in its `FRONTEND_ORIGINS` setting. CORS is not authentication; add authentication, TLS, rate limits, and resource limits before accepting public uploads. `VITE_API_URL` is included in browser code, so never put API keys or other secrets in a `VITE_` variable.
 
 ## Tests
 

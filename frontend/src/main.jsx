@@ -8,12 +8,7 @@ const API_URL =
   (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
 
 function getApiUrl(path) {
-  if (!API_URL) {
-    throw new Error(
-      "The analysis service is not configured. Connect a secured backend by setting VITE_API_URL.",
-    );
-  }
-  return `${API_URL}${path}`;
+  return API_URL ? `${API_URL}${path}` : path;
 }
 
 const STARTER_QUESTIONS = [
@@ -43,7 +38,7 @@ function App() {
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
 
-  const apiConfigured = Boolean(API_URL);
+  const apiConfigured = true;
   const showSuggestions = Boolean(documentInfo) && !result && !error;
 
   async function uploadJudgment(selectedFile) {
@@ -104,6 +99,7 @@ function App() {
           top_k: 5,
           api_key: apiKey.trim() || null,
           model: model.trim() || null,
+          index_data: documentInfo.index_data || null,
         }),
       });
       setResult(await parseResponse(response));

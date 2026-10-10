@@ -14,19 +14,28 @@ from utils.retriever import MAX_TOP_K, MIN_TOP_K, Retriever
 from utils.vector_store import VectorStore
 
 
-@lru_cache(maxsize=1)
-def get_embedding_model():
-    """Load the sentence-transformer once per API worker."""
-    return load_embedding_model()
+def get_embedding_model(api_key: str | None = None):
+    """Load the embedding model once per API worker or use request API key."""
+    return load_embedding_model(api_key=api_key)
 
 
-def build_index(pdf_bytes: bytes, filename: str, chunk_size: int, chunk_overlap: int) -> dict:
-    """PDF bytes -> pages -> chunks -> embeddings -> FAISS; document text stays in memory."""
+def build_index(
+    pdf_bytes: bytes,
+    filename: str,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+    api_key: str | None = None,
+) -> dict:
+    """PDF bytes -> pages -> chunks -> embeddings -> VectorStore; document text stays in memory."""
     pages = extract_pages(pdf_bytes)
     chunks = chunk_pages(pages, chunk_size, chunk_overlap)
     if not chunks:
         raise PDFProcessingError("No text chunks could be created from this PDF.")
-    embeddings = embed_texts(get_embedding_model(), [chunk.text for chunk in chunks])
+    try:
+        model = get_embedding_model(api_key)
+    except TypeError:
+        model = get_embedding_model()
+    embeddings = embed_texts(model, [chunk.text for chunk in chunks])
     return {
         "key": (hashlib.sha256(pdf_bytes).hexdigest(), chunk_size, chunk_overlap),
         "filename": filename,

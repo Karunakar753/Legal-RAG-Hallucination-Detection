@@ -1,0 +1,4 @@
+-r requirements.txt
+sentence-transformers>=2.7
+faiss-cpu>=1.8
+pytest>=8.0
