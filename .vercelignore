@@ -17,3 +17,7 @@ pytest.ini
 !.env.example
 frontend/node_modules/
 frontend/dist/
+uv.lock
+Dockerfile
+requirements-dev.txt
+

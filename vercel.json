@@ -6,7 +6,8 @@
   "outputDirectory": "frontend/dist",
   "functions": {
     "api/index.py": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "excludeFiles": "{frontend/**,data/**,models/**,vectorstore/**,tests/**,uv.lock}"
     }
   },
   "rewrites": [
