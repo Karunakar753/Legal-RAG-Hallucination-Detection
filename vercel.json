@@ -2,11 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
     "backend": {
-      "root": "Legal-RAG-Hallucination-Detection",
+      "root": ".",
       "framework": "fastapi"
     },
     "frontend": {
-      "root": "Legal-RAG-Hallucination-Detection/frontend",
+      "root": "frontend",
       "framework": "vite",
       "bindings": [
         {
